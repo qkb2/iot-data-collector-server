@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.db.database import Base, engine
-from src.routers import devices
+from src.routers import devices, frontend
 
 app = FastAPI(
     title="ESP Edge Backend",
@@ -20,6 +20,7 @@ app.add_middleware(
 
 # --- Routers ---
 app.include_router(devices.router, prefix="/api", tags=["devices"])
+app.include_router(frontend.router, prefix="/frontend", tags=["frontend"])
 
 
 # --- Startup / Shutdown ---

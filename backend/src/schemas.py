@@ -18,11 +18,16 @@ class DeviceOut(BaseModel):
 
 
 # --- Sending Data ---
-class SingleSensorValue(BaseModel):
-    name: str
-    value: float
+class SensorValueIn(BaseModel):
+    sensor: str
+    type: str
+    value: int
+    shift: int
+
+    def normalized(self) -> float:
+        return self.value / (1 << self.shift)
 
 
 class SensorDataIn(BaseModel):
     id: str
-    sensor_values: List[SingleSensorValue]
+    sensor_values: List[SensorValueIn]

@@ -1,53 +1,82 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from backend.src import schemas
 from src.db import models
 from src.db.database import get_session
+
+from backend.src import schemas
 
 router = APIRouter()
 
 
-# ---------------------------------------------------------
-#  POST /api/register
-# ---------------------------------------------------------
-@router.post("/register", response_model=schemas.DeviceOut)
+# ----------------------
+# Device Registration
+# ----------------------
+@router.post("/register")
 async def register_device(
-    payload: schemas.DeviceRegister, db: AsyncSession = Depends(get_session)
+    raw_id: str = Body(..., media_type="text/plain"),
+    db: AsyncSession = Depends(get_session),
 ):
-    existing = await models.Device.get_by_id(db, payload.id)
+    # clean whitespace
+    device_id = raw_id.strip()
 
-    if existing:
-        return existing
+    # Check if exists
+    device = await models.Device.get_by_id(db, device_id)
+    if device:
+        if device.approved:
+            return {"status": "already_registered"}
+        else:
+            raise HTTPException(
+                status_code=401, detail="Device still not registered."
+            )
 
-    device = models.Device(id=payload.id, name=payload.id)
-    await device.save(db)
+    # Create new device
+    device = models.Device(id=device_id)
+    db.add(device)
+    await db.commit()
 
-    for s in payload.sensors:
-        sensor = models.Sensor(name=s, device_id=device.id)
-        await sensor.save(db)
-
-    return device
+    raise HTTPException(
+        status_code=401, detail="Device not registered. Wait for approval."
+    )
 
 
-# ---------------------------------------------------------
-#  POST /api/send_data
-# ---------------------------------------------------------
+# ----------------------
+# Send Data
+# ----------------------
 @router.post("/send_data")
-async def send_sensor_data(
-    payload: schemas.SensorDataIn, db: AsyncSession = Depends(get_session)
+async def send_data(
+    values: list[schemas.SensorValueIn],
+    sensor_id: str = Header(None, alias="X-SENSOR-ID"),
+    db: AsyncSession = Depends(get_session),
 ):
-    device = await models.Device.get_by_id(db, payload.id)
+    if sensor_id is None:
+        raise HTTPException(status_code=400, detail="Missing X-SENSOR-ID header")
+
+    device = await models.Device.get_by_id(db, sensor_id)
     if not device:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Device not registered"
+            status_code=401, detail="Device not registered. Call /register first."
         )
 
-    for entry in payload.sensor_values:
-        sensor = await models.Sensor.get_sensor(db, device.id, entry.name)
+    for entry in values:
+        # check or create sensor
+        sensor = await models.Sensor.get_sensor(
+            db, device_id=device.id, name=entry.sensor
+        )
         if not sensor:
-            continue  # ignore unknown sensors
+            sensor = models.Sensor(
+                name=entry.sensor, type=entry.type, device_id=device.id
+            )
+            db.add(sensor)
+            await db.flush()  # get sensor id
 
-        reading = models.SensorReading(sensor_id=sensor.id, value=float(entry.value))
-        await reading.save(db)
+        # store reading
+        reading = models.SensorReading(
+            sensor_id=sensor.id,
+            raw_value=entry.value,
+            shift=entry.shift,
+            normalized=entry.normalized(),
+        )
+        db.add(reading)
 
-    return {"status": "ok"}
+    await db.commit()
+    return {"status": "ok", "count": len(values)}
