@@ -6,10 +6,10 @@ async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export const getDevices = () => api<DeviceDTO[]>("/frontend/devices");
+export const getDevices = () => api<DeviceDTO[]>("/api/frontend/devices");
 export const getDevice = (id: string) =>
-  api<DeviceDTO>(`/frontend/devices/${id}`);
+  api<DeviceDTO>(`/api/frontend/devices/${id}`);
 export const approveDevice = (id: string) =>
-  api<{ success: boolean }>(`/frontend/devices/${id}/approve`, {
+  api<{ success: boolean }>(`/api/frontend/devices/${id}/approve`, {
     method: "POST",
   });

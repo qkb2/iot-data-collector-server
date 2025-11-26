@@ -19,7 +19,7 @@ app.add_middleware(
 )
 
 # --- Routers ---
-app.include_router(devices.router, prefix="/api", tags=["devices"])
+app.include_router(devices.router, prefix="/devices", tags=["devices"])
 app.include_router(frontend.router, prefix="/frontend", tags=["frontend"])
 
 

@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from src.db import models
 from src.db.database import get_session
 
-router = APIRouter(prefix="/frontend", tags=["frontend"])
+router = APIRouter()
 
 
 # ----------------------------
@@ -12,8 +13,9 @@ router = APIRouter(prefix="/frontend", tags=["frontend"])
 # ----------------------------
 @router.get("/devices")
 async def list_devices(db: AsyncSession = Depends(get_session)):
-    stmt = select(models.Device).order_by(models.Device.id)
-    result = await db.execute(stmt)
+    result = await db.execute(
+        select(models.Device).options(selectinload(models.Device.sensors))
+    )
     devices = result.scalars().all()
 
     return [
@@ -27,7 +29,13 @@ async def list_devices(db: AsyncSession = Depends(get_session)):
 
 @router.get("/devices/{device_id}")
 async def device_detail(device_id: str, db: AsyncSession = Depends(get_session)):
-    device = await models.Device.get_by_id(db, device_id)
+    result = await db.execute(
+        select(models.Device)
+        .where(models.Device.id == device_id)
+        .options(selectinload(models.Device.sensors))
+    )
+    device = result.scalars().first()
+
     if not device:
         raise HTTPException(404, "Device not found")
 
@@ -46,7 +54,11 @@ async def device_detail(device_id: str, db: AsyncSession = Depends(get_session))
 
 @router.delete("/devices/{device_id}")
 async def delete_device(device_id: str, db: AsyncSession = Depends(get_session)):
-    device = await models.Device.get_by_id(db, device_id)
+    result = await db.execute(
+        select(models.Device).where(models.Device.id == device_id)
+    )
+    device = result.scalars().first()
+
     if not device:
         raise HTTPException(404, "Device not found")
 
@@ -60,8 +72,7 @@ async def delete_device(device_id: str, db: AsyncSession = Depends(get_session))
 # ----------------------------
 @router.get("/sensors")
 async def list_sensors(db: AsyncSession = Depends(get_session)):
-    stmt = select(models.Sensor)
-    result = await db.execute(stmt)
+    result = await db.execute(select(models.Sensor))
     sensors = result.scalars().all()
 
     return [
@@ -77,7 +88,11 @@ async def list_sensors(db: AsyncSession = Depends(get_session)):
 
 @router.get("/sensors/{sensor_id}")
 async def sensor_detail(sensor_id: int, db: AsyncSession = Depends(get_session)):
-    sensor = await db.get(models.Sensor, sensor_id)
+    result = await db.execute(
+        select(models.Sensor).where(models.Sensor.id == sensor_id)
+    )
+    sensor = result.scalars().first()
+
     if not sensor:
         raise HTTPException(404, "Sensor not found")
 
@@ -92,7 +107,11 @@ async def sensor_detail(sensor_id: int, db: AsyncSession = Depends(get_session))
 
 @router.delete("/sensors/{sensor_id}")
 async def delete_sensor(sensor_id: int, db: AsyncSession = Depends(get_session)):
-    sensor = await db.get(models.Sensor, sensor_id)
+    result = await db.execute(
+        select(models.Sensor).where(models.Sensor.id == sensor_id)
+    )
+    sensor = result.scalars().first()
+
     if not sensor:
         raise HTTPException(404, "Sensor not found")
 
@@ -111,18 +130,20 @@ async def list_readings(
     limit: int = 50,
     db: AsyncSession = Depends(get_session),
 ):
-    sensor = await db.get(models.Sensor, sensor_id)
+    result = await db.execute(
+        select(models.Sensor).where(models.Sensor.id == sensor_id)
+    )
+    sensor = result.scalars().first()
+
     if not sensor:
         raise HTTPException(404, "Sensor not found")
 
-    stmt = (
+    result = await db.execute(
         select(models.SensorReading)
-        .where(models.SensorReading.sensor_id == sensor_id)
+        .where(models.SensorReading.sensor_id == sensor.id)
         .order_by(desc(models.SensorReading.id))
         .limit(limit)
     )
-
-    result = await db.execute(stmt)
     readings = result.scalars().all()
 
     return [
@@ -138,7 +159,11 @@ async def list_readings(
 
 @router.post("/devices/{device_id}/approve")
 async def approve_device(device_id: str, db: AsyncSession = Depends(get_session)):
-    device = await models.Device.get_by_id(db, device_id)
+    result = await db.execute(
+        select(models.Device).where(models.Device.id == device_id)
+    )
+    device = result.scalars().first()
+    
     if not device:
         raise HTTPException(404, "Device not found")
 
