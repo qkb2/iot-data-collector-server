@@ -21,6 +21,7 @@ async def list_devices(db: AsyncSession = Depends(get_session)):
     return [
         {
             "id": d.id,
+            "approved": d.approved,
             "sensor_count": len(d.sensors),
         }
         for d in devices
@@ -41,6 +42,7 @@ async def device_detail(device_id: str, db: AsyncSession = Depends(get_session))
 
     return {
         "id": device.id,
+        "approved": device.approved,
         "sensors": [
             {
                 "id": s.id,
@@ -163,7 +165,7 @@ async def approve_device(device_id: str, db: AsyncSession = Depends(get_session)
         select(models.Device).where(models.Device.id == device_id)
     )
     device = result.scalars().first()
-    
+
     if not device:
         raise HTTPException(404, "Device not found")
 
