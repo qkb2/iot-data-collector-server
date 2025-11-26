@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Body, Depends, Header, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from src import schemas
 from src.db import models
 from src.db.database import get_session
-
-from backend.src import schemas
 
 router = APIRouter()
 
@@ -25,9 +24,7 @@ async def register_device(
         if device.approved:
             return {"status": "already_registered"}
         else:
-            raise HTTPException(
-                status_code=401, detail="Device still not registered."
-            )
+            raise HTTPException(status_code=401, detail="Device still not registered.")
 
     # Create new device
     device = models.Device(id=device_id)
