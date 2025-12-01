@@ -1,9 +1,13 @@
+from datetime import datetime
+
 from sqlalchemy import (
     Boolean,
+    DateTime,
     Float,
     ForeignKey,
     Integer,
     String,
+    func,
     select,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -51,5 +55,8 @@ class SensorReading(Base):
     raw_value: Mapped[int] = mapped_column(Integer)
     shift: Mapped[int] = mapped_column(Integer)
     normalized: Mapped[float] = mapped_column(Float)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
     sensor: Mapped["Sensor"] = relationship(back_populates="readings")

@@ -3,6 +3,9 @@ from typing import List
 from pydantic import BaseModel
 
 
+Q31_DIV_VAL = 1 << 31
+
+
 # --- Registration ---
 class DeviceRegister(BaseModel):
     id: str
@@ -25,7 +28,7 @@ class SensorValueIn(BaseModel):
     shift: int
 
     def normalized(self) -> float:
-        return self.value / (1 << self.shift)
+        return (self.value << self.shift) / Q31_DIV_VAL
 
 
 class SensorDataIn(BaseModel):
