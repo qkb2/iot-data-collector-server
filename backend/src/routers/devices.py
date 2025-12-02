@@ -57,8 +57,8 @@ async def send_data(
     for entry in values:
         # check or create sensor
         sensor = await models.Sensor.get_sensor(
-            db, device_id=device.id, name=entry.sensor
-        )
+            db, device_id=device.id, name=entry.sensor, type=entry.type
+        )  # fixed: can be differentiated by type AND name
         if not sensor:
             sensor = models.Sensor(
                 name=entry.sensor, type=entry.type, device_id=device.id

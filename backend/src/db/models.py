@@ -41,8 +41,10 @@ class Sensor(Base):
     readings: Mapped[list["SensorReading"]] = relationship(back_populates="sensor")
 
     @staticmethod
-    async def get_sensor(db: AsyncSession, device_id: str, name: str):
-        stmt = select(Sensor).where(Sensor.device_id == device_id, Sensor.name == name)
+    async def get_sensor(db: AsyncSession, device_id: str, name: str, type: str):
+        stmt = select(Sensor).where(
+            Sensor.device_id == device_id, Sensor.name == name, Sensor.type == type
+        )
         res = await db.execute(stmt)
         return res.scalar_one_or_none()
 
