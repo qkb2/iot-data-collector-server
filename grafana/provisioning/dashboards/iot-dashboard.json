@@ -135,7 +135,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) AS \"Recent Readings\" FROM sensor_readings WHERE timestamp >= NOW() - INTERVAL '24 hours';",
+          "rawSql": "SELECT COUNT(*) AS \"Recent Readings\" FROM sensor_readings WHERE created_at >= NOW() - INTERVAL '24 hours';",
           "refId": "A"
         }
       ],
@@ -323,7 +323,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT EXTRACT(EPOCH FROM (NOW() - MAX(timestamp))) AS \"Time Since Last Reading\" FROM sensor_readings;",
+          "rawSql": "SELECT EXTRACT(EPOCH FROM (NOW() - MAX(created_at))) AS \"Time Since Last Reading\" FROM sensor_readings;",
           "refId": "A"
         }
       ],
@@ -473,7 +473,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  timestamp AS \"time\",\n  normalized AS \"value\",\n  CONCAT(d.id, ' - ', s.name) AS \"metric\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nJOIN devices d ON s.device_id = d.id\nWHERE $__timeFilter(timestamp)\nORDER BY timestamp;",
+          "rawSql": "SELECT \n  created_at AS \"time\",\n  normalized AS \"value\",\n  CONCAT(d.id, ' - ', s.name) AS \"metric\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nJOIN devices d ON s.device_id = d.id\nWHERE $__timeFilter(created_at)\nORDER BY created_at;",
           "refId": "A"
         }
       ],
@@ -563,7 +563,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  $__timeGroupAlias(timestamp, $__interval),\n  AVG(normalized) AS \"value\",\n  s.type AS \"metric\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nWHERE $__timeFilter(timestamp)\nGROUP BY 1, s.type\nORDER BY 1;",
+          "rawSql": "SELECT \n  $__timeGroupAlias(created_at, $__interval),\n  AVG(normalized) AS \"value\",\n  s.type AS \"metric\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nWHERE $__timeFilter(created_at)\nGROUP BY 1, s.type\nORDER BY 1;",
           "refId": "A"
         }
       ],
@@ -649,7 +649,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  timestamp AS \"time\",\n  normalized AS \"value\",\n  CONCAT(d.id, ' - ', s.name) AS \"metric\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nJOIN devices d ON s.device_id = d.id\nWHERE $__timeFilter(timestamp)\nORDER BY timestamp;",
+          "rawSql": "SELECT \n  created_at AS \"time\",\n  normalized AS \"value\",\n  CONCAT(d.id, ' - ', s.name) AS \"metric\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nJOIN devices d ON s.device_id = d.id\nWHERE $__timeFilter(created_at)\nORDER BY created_at;",
           "refId": "A"
         }
       ],
@@ -737,7 +737,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  d.id AS \"Device\",\n  COUNT(sr.id) AS \"Readings\"\nFROM devices d\nLEFT JOIN sensors s ON d.id = s.device_id\nLEFT JOIN sensor_readings sr ON s.id = sr.sensor_id\nWHERE $__timeFilter(sr.timestamp) OR sr.timestamp IS NULL\nGROUP BY d.id\nORDER BY \"Readings\" DESC;",
+          "rawSql": "SELECT \n  d.id AS \"Device\",\n  COUNT(sr.id) AS \"Readings\"\nFROM devices d\nLEFT JOIN sensors s ON d.id = s.device_id\nLEFT JOIN sensor_readings sr ON s.id = sr.sensor_id\nWHERE $__timeFilter(sr.created_at) OR sr.created_at IS NULL\nGROUP BY d.id\nORDER BY \"Readings\" DESC;",
           "refId": "A"
         }
       ],
@@ -967,7 +967,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  d.id AS \"Device ID\",\n  d.approved AS \"Approved\",\n  COUNT(DISTINCT s.id) AS \"Sensors\",\n  COUNT(sr.id) AS \"Total Readings\",\n  MAX(sr.timestamp) AS \"Last Reading\"\nFROM devices d\nLEFT JOIN sensors s ON d.id = s.device_id\nLEFT JOIN sensor_readings sr ON s.id = sr.sensor_id\nGROUP BY d.id, d.approved\nORDER BY d.id;",
+          "rawSql": "SELECT \n  d.id AS \"Device ID\",\n  d.approved AS \"Approved\",\n  COUNT(DISTINCT s.id) AS \"Sensors\",\n  COUNT(sr.id) AS \"Total Readings\",\n  MAX(sr.created_at) AS \"Last Reading\"\nFROM devices d\nLEFT JOIN sensors s ON d.id = s.device_id\nLEFT JOIN sensor_readings sr ON s.id = sr.sensor_id\nGROUP BY d.id, d.approved\nORDER BY d.id;",
           "refId": "A"
         }
       ],
@@ -1055,7 +1055,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  s.type AS \"Sensor Type\",\n  AVG(sr.normalized) AS \"Average\",\n  MIN(sr.normalized) AS \"Min\",\n  MAX(sr.normalized) AS \"Max\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nWHERE $__timeFilter(sr.timestamp)\nGROUP BY s.type\nORDER BY s.type;",
+          "rawSql": "SELECT \n  s.type AS \"Sensor Type\",\n  AVG(sr.normalized) AS \"Average\",\n  MIN(sr.normalized) AS \"Min\",\n  MAX(sr.normalized) AS \"Max\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nWHERE $__timeFilter(sr.created_at)\nGROUP BY s.type\nORDER BY s.type;",
           "refId": "A"
         }
       ],
@@ -1220,7 +1220,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  sr.timestamp AS \"time\",\n  sr.normalized AS \"value\",\n  s.name AS \"metric\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nJOIN devices d ON s.device_id = d.id\nWHERE d.id = $device\n  AND $__timeFilter(sr.timestamp)\nORDER BY sr.timestamp;",
+          "rawSql": "SELECT \n  sr.created_at AS \"time\",\n  sr.normalized AS \"value\",\n  s.name AS \"metric\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nJOIN devices d ON s.device_id = d.id\nWHERE d.id = $device\n  AND $__timeFilter(sr.created_at)\nORDER BY sr.created_at;",
           "refId": "A"
         }
       ],
@@ -1325,7 +1325,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  sr.timestamp AS \"time\",\n  sr.normalized AS \"value\",\n  CONCAT(d.id, ' - ', s.name) AS \"metric\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nJOIN devices d ON s.device_id = d.id\nWHERE s.type = $sensor_type\n  AND $__timeFilter(sr.timestamp)\nORDER BY sr.timestamp;",
+          "rawSql": "SELECT \n  sr.created_at AS \"time\",\n  sr.normalized AS \"value\",\n  CONCAT(d.id, ' - ', s.name) AS \"metric\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nJOIN devices d ON s.device_id = d.id\nWHERE s.type = $sensor_type\n  AND $__timeFilter(sr.created_at)\nORDER BY sr.created_at;",
           "refId": "A"
         }
       ],
@@ -1430,7 +1430,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  sr.timestamp AS \"time\",\n  sr.normalized AS \"value\",\n  'Value' AS \"metric\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nJOIN devices d ON s.device_id = d.id\nWHERE CONCAT(d.id, ' - ', s.name) = $sensor\n  AND $__timeFilter(sr.timestamp)\nORDER BY sr.timestamp;",
+          "rawSql": "SELECT \n  sr.created_at AS \"time\",\n  sr.normalized AS \"value\",\n  'Value' AS \"metric\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nJOIN devices d ON s.device_id = d.id\nWHERE CONCAT(d.id, ' - ', s.name) = $sensor\n  AND $__timeFilter(sr.created_at)\nORDER BY sr.created_at;",
           "refId": "A"
         }
       ],
@@ -1500,7 +1500,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  sr.normalized AS \"Value\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nJOIN devices d ON s.device_id = d.id\nWHERE CONCAT(d.id, ' - ', s.name) = $sensor\nORDER BY sr.timestamp DESC\nLIMIT 1;",
+          "rawSql": "SELECT \n  sr.normalized AS \"Value\"\nFROM sensor_readings sr\nJOIN sensors s ON sr.sensor_id = s.id\nJOIN devices d ON s.device_id = d.id\nWHERE CONCAT(d.id, ' - ', s.name) = $sensor\nORDER BY sr.created_at DESC\nLIMIT 1;",
           "refId": "A"
         }
       ],
